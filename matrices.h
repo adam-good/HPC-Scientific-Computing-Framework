@@ -1,3 +1,4 @@
+#include <iostream>
 #include <vector>
 #include <array>
 #include <sstream>
@@ -42,6 +43,14 @@ public:
     /// <summary> Creates an N dimensional Identity Matrix with shape `shape` </summary>
     /// <param name=shape> Array containing the sizes of each dimension of the Matrix </param>
     static HyperMatrix<N> Identity(std::array<int, N> shape);
+
+    /// <summary> Add two N dimensional Hyper Matrices element-wise
+    /// <param name=A> HyperMatrix for addition
+    /// <param name=B> HyperMatrix for addition 
+    static HyperMatrix<N> Add(HyperMatrix<N> A, HyperMatrix<N> B);
+
+    /// <summary> Multiply Matrix A by Scalar s
+    static HyperMatrix<N> ScalarMultiply(HyperMatrix<N> A, double s);
 
     /// <summary> Return the number of dimensions N this matrix has </summary>
     int GetDims();
@@ -106,6 +115,35 @@ HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
     std::vector<double> values(length, 0.0);
 
 
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    for (int i = 0; i < N; i++)
+    {
+        if (A.shape[i] != B.shape[i])
+        {
+            std::cout << "Cannot Add Matrices of Different Shapes!" << std::endl;
+            throw;
+        }
+    }
+
+    HyperMatrix<N> result = HyperMatrix::Zeros(A.shape);
+    for (int i = 0; i < A.values.size(); i++)
+        result.values[i] = A.values[i] + B.values[i];
+
+    return result;
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
+{
+    HyperMatrix<N> result = HyperMatrix<N>::Zeros(A.shape);
+    for (int i = 0; i < result.values.size(); i++)
+        result.values[i] = s*A.values[i];
+
+    return result;
 }
 
 template<unsigned int N>
@@ -181,6 +219,8 @@ std::string HyperMatrix<N>::toString() const
     ss << '>';
     return ss.str();
 }
+
+
 
 template<unsigned int N>
 inline std::ostream &operator<<(std::ostream &os, HyperMatrix<N> const &M)
