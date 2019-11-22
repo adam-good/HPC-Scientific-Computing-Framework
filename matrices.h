@@ -172,10 +172,10 @@ double HyperMatrix<N>::At(std::array<int, N> indices)
 template<unsigned int N>
 void HyperMatrix<N>::calculateStride()
 {
-    // Column Major
+    // Row Major
     this->strides[0] = 1;
     for (int i = 1; i < N; i++)
-        strides[i] = shape[i]*strides[i-1];
+        strides[i] = shape[i-1]*strides[i-1];
 
     // auto tmp = this->strides[0];
     // this->strides[0] = this->strides[1];
