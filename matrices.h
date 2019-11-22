@@ -180,10 +180,6 @@ void HyperMatrix<N>::calculateStride()
     // auto tmp = this->strides[0];
     // this->strides[0] = this->strides[1];
     // this->strides[1] = tmp;
-
-    for (int i = 0; i < N; i++)
-        std::cout << strides[i] << ",";
-    std::cout << std::endl;
 }
 
 template<unsigned int N>
