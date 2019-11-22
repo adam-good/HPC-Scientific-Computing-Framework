@@ -7,30 +7,44 @@ using namespace std;
 int main(void)
 {
     const unsigned int N = 3;
-    array<int, N> shape = {2,2,2};
-    vector<double> values = {1,2,3,4,5,6,7,8};
-    vector<double> values_rev = {8,7,6,5,4,3,2,1};
+    array<int, N> shape = {3,3,3};
+
+    int size = 1;
+    for (auto itr = shape.begin(); itr != shape.end(); itr++)
+        size *= *itr;
+
+
+    vector<double> values(size);
+    for (int i = 1; i <= size; i++)
+        values[i-1] = i;
     
     HyperMatrix<N> A = HyperMatrix<N>(shape, values);
-    HyperMatrix<N> B = HyperMatrix<N>(shape, values_rev);
     HyperMatrix<N> M_0 = HyperMatrix<N>::Zeros(shape);
     HyperMatrix<N> M_1 = HyperMatrix<N>::Ones(shape);
 
-    HyperMatrix<N> M = HyperMatrix<N>::Add(A,B);
-    M = HyperMatrix<N>::ScalarMultiply(M,-2);
+    HyperMatrix<N> I = HyperMatrix<N>::Identity(shape);
 
+    HyperMatrix<N> M = I;
     cout << M.GetDims() << endl;
     cout << M << endl;
     cout << M_0 << endl;
     cout << M_1 << endl;
-    cout << M.At({0,0,0}) << endl; // 1
-    cout << M.At({1,0,0}) << endl; // 2
-    cout << M.At({0,1,0}) << endl; // 3
-    cout << M.At({1,1,0}) << endl; // 4
-    cout << M.At({0,0,1}) << endl; // 5
-    cout << M.At({1,0,1}) << endl; // 6
-    cout << M.At({0,1,1}) << endl; // 7
-    cout << M.At({1,1,1}) << endl; // 8
+
+    for (int k = 0; k < shape[2]; k++)
+    for (int j = 0; j < shape[0]; j++)
+    for (int i = 0; i < shape[1]; i++)
+        {
+            cout << "A[" << i << "," << j << "," << k << "] = " << M.At({i,j,k}) << endl;
+        }
+
+    // cout << M.At({0,0,0}) << endl; // 1
+    // cout << M.At({1,0,0}) << endl; // 2
+    // cout << M.At({0,1,0}) << endl; // 3
+    // cout << M.At({1,1,0}) << endl; // 4
+    // cout << M.At({0,0,1}) << endl; // 5
+    // cout << M.At({1,0,1}) << endl; // 6
+    // cout << M.At({0,1,1}) << endl; // 7
+    // cout << M.At({1,1,1}) << endl; // 8
 
     return 0;
 }

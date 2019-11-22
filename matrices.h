@@ -107,14 +107,24 @@ template<unsigned int N>
 HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
 {
     // Not implemented. Will fix later
-    throw;
+    // throw;
 
-    int length = 1;
-    for (int i = 0; i < N; i++)
-        length *= shape[i];
-    std::vector<double> values(length, 0.0);
+    // Identity must be "square" so all dimensions must be equal
+    for (int i = 0; i < N-1; i++)
+        if (shape[i] != shape[i+1])
+            throw;
 
+    HyperMatrix<N> identity = HyperMatrix<N>::Zeros(shape);
 
+    for (int i = 0; i < N; i++) 
+    {
+        int idx = 0;
+        for (int j = 0; j < N; j++)
+            idx += i * identity.strides[j];
+        identity.values[idx] = 1;
+    }
+
+    return identity;
 }
 
 template<unsigned int N>
@@ -162,26 +172,17 @@ double HyperMatrix<N>::At(std::array<int, N> indices)
 template<unsigned int N>
 void HyperMatrix<N>::calculateStride()
 {
-    // for (int k = 0; k < N; k++)
-    // {
-    //     strides[k] = 1;
-    //     for (int j = k+1; j < N-1; j++)
-    //         strides[k] *= this->shape[j];
-    // }
-
-    // for (int k = 0; k < N; k++) 
-    // {
-    //     strides[k] = 1;
-    //     for (int j = 0; j < k-1; j++)
-    //         strides[k] *= shape[j];
-    // }
-
+    // Column Major
     this->strides[0] = 1;
     for (int i = 1; i < N; i++)
-        strides[i] = shape[i-1]*strides[i-1];
+        strides[i] = shape[i]*strides[i-1];
+
+    // auto tmp = this->strides[0];
+    // this->strides[0] = this->strides[1];
+    // this->strides[1] = tmp;
 
     for (int i = 0; i < N; i++)
-        std::cout << strides[i] << ',';
+        std::cout << strides[i] << ",";
     std::cout << std::endl;
 }
 
@@ -219,8 +220,6 @@ std::string HyperMatrix<N>::toString() const
     ss << '>';
     return ss.str();
 }
-
-
 
 template<unsigned int N>
 inline std::ostream &operator<<(std::ostream &os, HyperMatrix<N> const &M)
