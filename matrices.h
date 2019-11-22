@@ -49,7 +49,9 @@ public:
     /// <param name=B> HyperMatrix for addition 
     static HyperMatrix<N> Add(HyperMatrix<N> A, HyperMatrix<N> B);
 
-    /// <summary> Multiply Matrix A by Scalar s
+    /// <summary> Multiply Matrix A by Scalar scalar s
+    /// <param name=A> HyperMatrix to be multiplied by s
+    /// <param name=s> Scalar to be multiplied by A
     static HyperMatrix<N> ScalarMultiply(HyperMatrix<N> A, double s);
 
     /// <summary> Return the number of dimensions N this matrix has </summary>
@@ -176,10 +178,6 @@ void HyperMatrix<N>::calculateStride()
     this->strides[0] = 1;
     for (int i = 1; i < N; i++)
         strides[i] = shape[i-1]*strides[i-1];
-
-    // auto tmp = this->strides[0];
-    // this->strides[0] = this->strides[1];
-    // this->strides[1] = tmp;
 }
 
 template<unsigned int N>
@@ -202,16 +200,6 @@ std::string HyperMatrix<N>::toString() const
     for (int i = 0; i < N-1; i++)
         ss << this->shape[i] << ',';
     ss << this->shape[N-1] << ']';
-
-    // int length = 1;
-    // for (int i = 0; i < N; i++)
-    //     length *= this->shape[i];
-
-    // for (int i = 0; i < length; i++)
-    //     if ( (i+1) % this->shape[N-1] == 0)
-    //         ss << this->values[i] << '\n';
-    //     else
-    //         ss << this->values[i] << ' ';
 
     ss << '>';
     return ss.str();

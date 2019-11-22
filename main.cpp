@@ -37,14 +37,5 @@ int main(void)
             cout << "A[" << i << "," << j << "," << k << "] = " << M.At({i,j,k}) << endl;
         }
 
-    // cout << M.At({0,0,0}) << endl; // 1
-    // cout << M.At({1,0,0}) << endl; // 2
-    // cout << M.At({0,1,0}) << endl; // 3
-    // cout << M.At({1,1,0}) << endl; // 4
-    // cout << M.At({0,0,1}) << endl; // 5
-    // cout << M.At({1,0,1}) << endl; // 6
-    // cout << M.At({0,1,1}) << endl; // 7
-    // cout << M.At({1,1,1}) << endl; // 8
-
     return 0;
 }
