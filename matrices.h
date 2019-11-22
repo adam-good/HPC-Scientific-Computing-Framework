@@ -103,8 +103,6 @@ HyperMatrix<N> HyperMatrix<N>::Ones(std::array<int, N> shape)
     return HyperMatrix<N>(shape, values);
 }
 
-// TODO: Check for N dimensional iteration
-// https://stackoverflow.com/questions/14040260/how-to-iterate-over-n-dimensions
 template<unsigned int N>
 HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
 {
