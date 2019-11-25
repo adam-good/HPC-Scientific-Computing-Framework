@@ -6,36 +6,41 @@ using namespace std;
 
 int main(void)
 {
-    const unsigned int N = 3;
-    array<int, N> shape = {3,2,2};
+    const unsigned int N = 2;
+    array<int, N> shape_A = {3,2};
+    array<int, N> shape_B = {2,3};
 
     int size = 1;
-    for (auto itr = shape.begin(); itr != shape.end(); itr++)
+    for (auto itr = shape_A.begin(); itr != shape_A.end(); itr++)
         size *= *itr;
 
 
-    vector<double> values(size);
-    for (int i = 1; i <= size; i++)
-        values[i-1] = i;
-    
-    HyperMatrix<N> A = HyperMatrix<N>(shape, values);
-    HyperMatrix<N> M_0 = HyperMatrix<N>::Zeros(shape);
-    HyperMatrix<N> M_1 = HyperMatrix<N>::Ones(shape);
+    vector<double> values_A(size);
+    vector<double> values_B(size);
+    for (int i = 0; i < size; i++)
+    {
+        values_A[i] = i;
+        values_B[i] = size-i;    
+    }
 
-    // HyperMatrix<N> I = HyperMatrix<N>::Identity(shape);
+    HyperMatrix<N> A(shape_A, values_A);
+    HyperMatrix<N> B(shape_B, values_B);
+    HyperMatrix<N> C = A*B;
+    HyperMatrix<N> I = HyperMatrix<N>::Identity(C.getShape());
+    HyperMatrix<N> D = C + I;
+    HyperMatrix<N> M_0 = I - I;
 
-    HyperMatrix<N> M = A;
-    cout << M.GetDims() << endl;
-    cout << M << endl;
+
+    cout << A << endl;
+    cout << B << endl;
+    cout << endl;
+    cout << C << endl;
+    cout << endl;
+    cout << I << endl;
+    cout << endl;
+    cout << D << endl;
+    cout << endl;
     cout << M_0 << endl;
-    cout << M_1 << endl;
-
-    for (int k = 0; k < shape[2]; k++)
-    for (int j = 0; j < shape[1]; j++)
-    for (int i = 0; i < shape[0]; i++)
-        {
-            cout << "A[" << i << "," << j << "," << k << "] = " << M.At({i,j,k}) << endl;
-        }
 
     return 0;
 }

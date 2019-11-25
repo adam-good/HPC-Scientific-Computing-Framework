@@ -54,12 +54,31 @@ public:
     /// <param name=s> Scalar to be multiplied by A
     static HyperMatrix<N> ScalarMultiply(HyperMatrix<N> A, double s);
 
+    /// <summary> Multiply two N dimensional Hyper Matrices
+    /// <param name=A> HyperMatrix for multiplication
+    /// <param name=B> HyperMatrix for multiplication 
+    static HyperMatrix<N> MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B);
+
     /// <summary> Return the number of dimensions N this matrix has </summary>
     int GetDims();
 
     /// <summary> returns value found at specified indices </summary>
     /// <param name=indices> Array containing values of indices for the requested value </param>
     double At(std::array<int, N> indices);
+
+    /// <summary> Calculate stride based on given shape </summary>
+    /// <param name=shape> Shape to be used to calculate the stride </param>
+    static std::array<int, N> CalculateStride(std::array<int, N> shape);
+
+    /// <summary> Convert a list of indices to their flat array equivalent given strides </summary>
+    /// <param name=indices> Array containing values </param>
+    /// <param name=strides> Array containing the strides to be used to translate the indices </param>
+    static int ConvertIndex(std::array<int, N> indices, std::array<int,N> strides);
+
+    // Getters
+    std::array<int,N> getShape();
+    std::array<int,N> getStrides();
+    std::vector<double> getValues();
 
     operator std::string() const { return this->toString(); }
 };
@@ -106,21 +125,19 @@ HyperMatrix<N> HyperMatrix<N>::Ones(std::array<int, N> shape)
 template<unsigned int N>
 HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
 {
-    // Not implemented. Will fix later
-    // throw;
-
     // Identity must be "square" so all dimensions must be equal
     for (int i = 0; i < N-1; i++)
         if (shape[i] != shape[i+1])
             throw;
 
     HyperMatrix<N> identity = HyperMatrix<N>::Zeros(shape);
+    int dim = shape[0];
 
-    for (int i = 0; i < N; i++) 
+    for (int i = 0; i < dim; i++) 
     {
         int idx = 0;
         for (int j = 0; j < N; j++)
-            idx += i * identity.strides[j];
+            idx += i * identity.getStrides()[j];
         identity.values[idx] = 1;
     }
 
@@ -139,7 +156,7 @@ HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
         }
     }
 
-    HyperMatrix<N> result = HyperMatrix::Zeros(A.shape);
+    HyperMatrix<N> result = HyperMatrix::Zeros(A.getShape());
     for (int i = 0; i < A.values.size(); i++)
         result.values[i] = A.values[i] + B.values[i];
 
@@ -154,6 +171,37 @@ HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
         result.values[i] = s*A.values[i];
 
     return result;
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    if (N != 2)
+    {
+        std::cout << "Higher Dimension Multiplication Not Implimented" << std::endl;
+        throw;
+    }
+
+    // TODO: Try to do this without index translations
+    std::array<int, N> new_shape = {A.shape[0], B.shape[1]};
+    std::vector<double> new_values(A.shape[0] * B.shape[1]);
+    std::array<int, N> strides = HyperMatrix<N>::CalculateStride(new_shape);
+    int k_dim = A.shape[1];
+    
+    for (int i = 0; i < new_shape[1]; i++)
+    for (int j = 0; j < new_shape[0]; j++)
+    {
+        double value = 0;
+        for (int k = 0; k < k_dim; k++)
+            value += A.At({i,k}) * B.At({k,j});
+
+        int idx = HyperMatrix<N>::ConvertIndex({i,j}, strides);
+        new_values[idx] = value;
+    }
+
+    HyperMatrix<N> C(new_shape, new_values);
+
+    return C;
 }
 
 template<unsigned int N>
@@ -172,19 +220,38 @@ double HyperMatrix<N>::At(std::array<int, N> indices)
 template<unsigned int N>
 void HyperMatrix<N>::calculateStride()
 {
-    // Row Major
-    this->strides[0] = 1;
-    for (int i = 1; i < N; i++)
-        strides[i] = shape[i-1]*strides[i-1];
+    this->strides = HyperMatrix<N>::CalculateStride(this->shape);
+}
+
+template<unsigned int N>
+std::array<int, N> HyperMatrix<N>::CalculateStride(std::array<int, N> shape)
+{
+    // Row Major Strides (like numpy)
+    // https://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
+    std::array<int, N> strides;
+    for (int k = 0; k < N; k++)
+    {
+        strides[k] = 1;
+        for (int j = k+1; j < N; j++)
+            strides[k] *= shape[j];
+    }
+
+    return strides;
+}
+
+template<unsigned int N>
+int HyperMatrix<N>::ConvertIndex(std::array<int, N> indices, std::array<int, N> strides)
+{
+    int idx = 0;
+    for (int i = 0; i < N; i++)
+        idx += indices[i] * strides[i];
+    return idx;
 }
 
 template<unsigned int N>
 int HyperMatrix<N>::convertIndex(std::array<int, N> indices)
 {
-    int idx = 0;
-    for (int i = 0; i < N; i++)
-        idx += indices[i] * this->strides[i];
-    return idx;
+    return HyperMatrix<N>::ConvertIndex(indices, this->strides);
 }
 
 // TODO: Try to print values similar to numpy style...or anything really?
@@ -192,19 +259,77 @@ template<unsigned int N>
 std::string HyperMatrix<N>::toString() const
 {
     std::stringstream ss;
-    ss << "<HyperMatrix ";
 
-    ss << "shape=[";
-    for (int i = 0; i < N-1; i++)
-        ss << this->shape[i] << ',';
-    ss << this->shape[N-1] << ']';
+    if (N == 2)
+    {
+        ss << "[ ";
+        for (int i = 0; i < values.size(); i++)
+        {
+            ss << values[i] << " ";
+            if ( (i+1) % shape[1] == 0 && (i+1) != values.size())
+                ss << "\n  ";
+        }
+        ss << "]";
+    }
+    else
+    {
+        ss << "<HyperMatrix ";
 
-    ss << '>';
+        ss << "shape=[";
+        for (int i = 0; i < N-1; i++)
+            ss << this->shape[i] << ',';
+        ss << this->shape[N-1] << ']';
+
+        ss << '>';    
+    }
+    
     return ss.str();
+}
+
+template<unsigned int N>
+std::array<int,N> HyperMatrix<N>::getShape()
+{
+    return this->shape;
+}
+
+template<unsigned int N>
+std::array<int, N> HyperMatrix<N>::getStrides()
+{
+    return this->strides;
+}
+
+template<unsigned int N>
+std::vector<double> HyperMatrix<N>::getValues()
+{
+    return this->values;
 }
 
 template<unsigned int N>
 inline std::ostream &operator<<(std::ostream &os, HyperMatrix<N> const &M)
 {
     return os << std::string(M);
+}
+
+template<unsigned int N>
+inline HyperMatrix<N> operator-(const HyperMatrix<N>A)
+{
+    return HyperMatrix<N>::ScalarMultiply(A,-1);
+}
+
+template<unsigned int N>
+inline HyperMatrix<N> operator+(const HyperMatrix<N> A, const HyperMatrix<N> B)
+{
+    return HyperMatrix<N>::Add(A,B);
+}
+
+template<unsigned int N>
+inline HyperMatrix<N> operator-(const HyperMatrix<N> A, const HyperMatrix<N> B)
+{
+    return HyperMatrix<N>::Add(A, -B);
+}
+
+template<unsigned int N>
+inline HyperMatrix<N> operator*(const HyperMatrix<N> A, const HyperMatrix<N> B)
+{
+    return HyperMatrix<N>::MatrixMultiply(A,B);
 }
