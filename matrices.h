@@ -49,6 +49,11 @@ public:
     /// <param name=B> HyperMatrix for addition 
     static HyperMatrix<N> Add(HyperMatrix<N> A, HyperMatrix<N> B);
 
+    /// <summary> Add two N dimensional Hyper Matrices element-wise
+    /// <param name=A> HyperMatrix for subtraction
+    /// <param name=B> HyperMatrix for subtraction 
+    static HyperMatrix<N> Subtract(HyperMatrix<N> A, HyperMatrix<N> B);
+
     /// <summary> Multiply Matrix A by Scalar scalar s
     /// <param name=A> HyperMatrix to be multiplied by s
     /// <param name=s> Scalar to be multiplied by A
@@ -58,6 +63,20 @@ public:
     /// <param name=A> HyperMatrix for multiplication
     /// <param name=B> HyperMatrix for multiplication 
     static HyperMatrix<N> MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B);
+
+    /// <summary> Add all elements of the matrix for a total sum
+    /// <param name=A> HyperMatrix to total
+    static HyperMatrix<N> Sum(HyperMatrix<N> A);
+
+    /// <summary> Compare two N dimensional Hyper Matrices and return the larger one
+    /// <param name=A> HyperMatrix to compare
+    /// <param name=B> HyperMatrix to compare
+    static HyperMatrix<N> LargerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+
+    /// <summary> Compare two N dimensional Hyper Matrices and return the smaller one
+    /// <param name=A> HyperMatrix to compare
+    /// <param name=B> HyperMatrix to compare
+    static HyperMatrix<N> SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B);
 
     /// <summary> Return the number of dimensions N this matrix has </summary>
     int GetDims();
@@ -164,6 +183,25 @@ HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::Subtract(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    for (int i = 0; i < N; i++)
+    {
+        if (A.shape[i] != B.shape[i])
+        {
+            std::cout << "Cannot Subtract Matrices of Different Shapes!" << std::endl;
+            throw;
+        }
+    }
+
+    HyperMatrix<N> result = HyperMatrix::Zeros(A.getShape());
+    for (int i = 0; i < A.values.size(); i++)
+        result.values[i] = A.values[i] - B.values[i];
+
+    return result;
+}
+
+template<unsigned int N>
 HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
 {
     HyperMatrix<N> result = HyperMatrix<N>::Zeros(A.shape);
@@ -178,7 +216,7 @@ HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B
 {
     if (N != 2)
     {
-        std::cout << "Higher Dimension Multiplication Not Implimented" << std::endl;
+        std::cout << "Higher Dimension Multiplication Not Implemented" << std::endl;
         throw;
     }
 
@@ -202,6 +240,59 @@ HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B
     HyperMatrix<N> C(new_shape, new_values);
 
     return C;
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::Sum(HyperMatrix<N> A)
+{
+    int result = 0;
+
+    for (int i = 0; i < A.values.size(); i++)
+        result += A.values[i];
+
+    return result;
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    int Aresult = 0;
+    int Bresult = 0;
+
+    for (int i = 0; i < A.values.size(); i++)
+        Aresult += A.values[i];
+    for (int i = 0; i < B.values.size(); i++)
+        Bresult += B.values[i];
+
+    if (Aresult > Bresult)
+    {
+        return Aresult;
+    }
+    else
+    {
+        return Bresult;
+    }
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    int Aresult = 0;
+    int Bresult = 0;
+
+    for (int i = 0; i < A.values.size(); i++)
+        Aresult += A.values[i];
+    for (int i = 0; i < B.values.size(); i++)
+        Bresult += B.values[i];
+
+    if (Aresult < Bresult)
+    {
+        return Aresult;
+    }
+    else
+    {
+        return Bresult;
+    }
 }
 
 template<unsigned int N>
