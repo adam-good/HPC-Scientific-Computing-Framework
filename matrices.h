@@ -63,7 +63,7 @@ public:
     /// <summary> Multiply two N dimensional Hyper Matrices
     /// <param name=A> HyperMatrix for multiplication
     /// <param name=B> HyperMatrix for multiplication 
-    static HyperMatrix<N> MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix<N> MatrixMultiply2D(HyperMatrix<N> A, HyperMatrix<N> B);
 
     /// <summary> Add all elements of the matrix for a total sum
     /// <param name=A> HyperMatrix to total
@@ -217,7 +217,7 @@ HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix<N> HyperMatrix<N>::MatrixMultiply2D(HyperMatrix<N> A, HyperMatrix<N> B)
 {
     if (N != 2)
     {
@@ -446,5 +446,5 @@ inline HyperMatrix<N> operator-(const HyperMatrix<N> A, const HyperMatrix<N> B)
 template<unsigned int N>
 inline HyperMatrix<N> operator*(const HyperMatrix<N> A, const HyperMatrix<N> B)
 {
-    return HyperMatrix<N>::MatrixMultiply(A,B);
+    return HyperMatrix<N>::MatrixMultiply2D(A,B);
 }
