@@ -225,6 +225,12 @@ HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B
         throw;
     }
 
+    if (A.shape[1] != B.shape[0])
+    {
+        std::cout << "N=2 Multiplication Requires proper matrix shapes!" << std::endl;
+        throw;
+    }
+
     std::array<int,N> new_shape = {A.shape[0], B.shape[1]};
     std::vector<double> new_values(A.shape[0] * B.shape[1]);
     std::array<int, N> strides = HyperMatrix<N>::CalculateStride(new_shape);
