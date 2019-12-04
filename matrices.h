@@ -3,6 +3,7 @@
 #include <array>
 #include <sstream>
 #include <string>
+#include <functional>
 
 /*
     An N-Dimensional Matrix Implementation
@@ -77,6 +78,10 @@ public:
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
     static HyperMatrix<N> SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+
+    /// <summary> Apply the function func to every value in the matrix. Returns matrix of new values. </summary>
+    /// <param name=func> Function to be applied to values in Matrix </param>
+    HyperMatrix<N> Apply(std::function<double(double)> func);
 
     /// <summary> Return the number of dimensions N this matrix has </summary>
     int GetDims();
@@ -293,6 +298,18 @@ HyperMatrix<N> HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
     {
         return Bresult;
     }
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::Apply(std::function<double(double)> func)
+{
+    int size = this->values.size();
+    std::vector<double> newValues(size);
+    for (int i = 0; i < size; i++)
+        newValues[i] = func(this->values[i]);
+
+    HyperMatrix<N> newMatrix(this->shape, newValues);
+    return newMatrix;
 }
 
 template<unsigned int N>
