@@ -416,7 +416,7 @@ inline HyperMatrix<N> operator+(const HyperMatrix<N> A, const HyperMatrix<N> B)
 template<unsigned int N>
 inline HyperMatrix<N> operator-(const HyperMatrix<N> A, const HyperMatrix<N> B)
 {
-    return HyperMatrix<N>::Add(A, -B);
+    return HyperMatrix<N>::Subtract(A,B);
 }
 
 template<unsigned int N>
