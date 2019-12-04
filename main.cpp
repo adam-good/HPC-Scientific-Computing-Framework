@@ -1,5 +1,6 @@
 #include <iostream>
 #include <cmath>
+#include <ctime>
 #include "matrices.h"
 
 using namespace std;
@@ -52,6 +53,7 @@ void TestArithmatic()
 
 
     cout << A << endl;
+    cout << endl;
     cout << B << endl;
     cout << endl;
     cout << C << endl;
@@ -63,9 +65,37 @@ void TestArithmatic()
     cout << M_0 << endl;
 }
 
+void TestScale()
+{
+    const unsigned int N = 2;
+    int n = 4096;
+    int m = 2160;
+    int z = 3;
+    array<int, N> shape_A = {n,m};
+    array<int, N> shape_B = {m,n};
+
+    HyperMatrix<N> A = HyperMatrix<N>::Zeros(shape_A);
+    HyperMatrix<N> B = HyperMatrix<N>::Ones(shape_B);
+
+    A*B;
+}
+
+void TimeTest(function<void()> test, string testName)
+{
+    clock_t begin = clock();
+
+    test();
+
+    clock_t end = clock();
+    double elapsed_time = double(end - begin) / CLOCKS_PER_SEC;
+
+    cout << testName << "\n  Elapsed Time: " << elapsed_time << " Seconds" << endl;
+}
+
 int main(void)
 {
-    TestApply();
-    TestArithmatic();
+    // TimeTest(TestArithmatic, "Arithmatic");
+    // TimeTest(TestApply, "Apply");
+    TimeTest(TestScale, "Scale");
     return 0;
 }
