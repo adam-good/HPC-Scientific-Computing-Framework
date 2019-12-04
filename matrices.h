@@ -225,21 +225,22 @@ HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B
         throw;
     }
 
-    // TODO: Try to do this without index translations
-    std::array<int, N> new_shape = {A.shape[0], B.shape[1]};
+    std::array<int,N> new_shape = {A.shape[0], B.shape[1]};
     std::vector<double> new_values(A.shape[0] * B.shape[1]);
     std::array<int, N> strides = HyperMatrix<N>::CalculateStride(new_shape);
-    int k_dim = A.shape[1];
-    
-    for (int i = 0; i < new_shape[1]; i++)
-    for (int j = 0; j < new_shape[0]; j++)
-    {
-        double value = 0;
-        for (int k = 0; k < k_dim; k++)
-            value += A.At({i,k}) * B.At({k,j});
+    int shared_dim = A.shape[1];
 
-        int idx = HyperMatrix<N>::ConvertIndex({i,j}, strides);
-        new_values[idx] = value;
+    std::vector<double> a_vals = A.values;
+    std::vector<double> b_vals = B.values;
+
+    for (int i = 0; i < a_vals.size() / A.shape[1]; i++)
+    for (int j = 0; j < b_vals.size() / B.shape[0]; j++)
+    {
+        int dotprod = 0;
+        for (int k = 0; k < shared_dim; k++)
+            dotprod += a_vals[i*A.strides[0] + k] * b_vals[k * strides[0] + j];
+
+        new_values[ConvertIndex({i,j}, strides)] = dotprod;
     }
 
     HyperMatrix<N> C(new_shape, new_values);
