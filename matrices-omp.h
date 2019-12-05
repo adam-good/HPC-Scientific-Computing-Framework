@@ -10,7 +10,7 @@
     An N-Dimensional Matrix Implementation
 */
 template<unsigned int N>
-class HyperMatrix
+class HyperMatrix_OMP
 {
 private:
     int dims = N;
@@ -25,69 +25,69 @@ private:
 public:
     /// <summary> Matrix </summary>
     /// <param name=shape>Array containing the sizes of each dimension of the Matrix</param>
-    HyperMatrix(std::array<int, N> shape);
+    HyperMatrix_OMP(std::array<int, N> shape);
 
     /// <summary>Create a Matrix with shape `shape` with values in `values`</summary>
     /// <param name=shape>Array containing the sizes of each dimension of the Matrix</param>
     /// <param name=values>Vector of values for the matrix. Vector should be single dimensional</param>
-    HyperMatrix(std::array<int, N> shape, std::vector<double> values);
+    HyperMatrix_OMP(std::array<int, N> shape, std::vector<double> values);
 
-    ~HyperMatrix();
+    ~HyperMatrix_OMP();
 
     /// <summary> Creates an N dimensional Matrix of 0s with shape `shape` </summary>
     /// <param name=shape> Array containing the sizes of each dimension of the Martix</param>
-    static HyperMatrix<N> Zeros(std::array<int, N> shape);
+    static HyperMatrix_OMP<N> Zeros(std::array<int, N> shape);
 
     /// <summary> Creates an N dimensional Matrix of 0s with shape `shape` </summary>
     /// <param name=shape> Array containing the sizes of each dimension of the Matrix </param>
-    static HyperMatrix<N> Ones(std::array<int, N> shape);
+    static HyperMatrix_OMP<N> Ones(std::array<int, N> shape);
 
     /// <summary> Creates an N dimensional Identity Matrix with shape `shape` </summary>
     /// <param name=shape> Array containing the sizes of each dimension of the Matrix </param>
-    static HyperMatrix<N> Identity(std::array<int, N> shape);
+    static HyperMatrix_OMP<N> Identity(std::array<int, N> shape);
 
     /// <summary> Add two N dimensional Hyper Matrices element-wise
     /// <param name=A> HyperMatrix for addition
     /// <param name=B> HyperMatrix for addition 
-    static HyperMatrix<N> Add(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix_OMP<N> Add(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Add two N dimensional Hyper Matrices element-wise
     /// <param name=A> HyperMatrix for subtraction
     /// <param name=B> HyperMatrix for subtraction 
-    static HyperMatrix<N> Subtract(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix_OMP<N> Subtract(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Multiply Matrix A by Scalar scalar s
     /// <param name=A> HyperMatrix to be multiplied by s
     /// <param name=s> Scalar to be multiplied by A
-    static HyperMatrix<N> ScalarMultiply(HyperMatrix<N> A, double s);
+    static HyperMatrix_OMP<N> ScalarMultiply(HyperMatrix_OMP<N> A, double s);
 
     /// <summary> Standard Dot Product
     /// <param name=A> Vector for multiplication
     /// <param name=B> Vector for multiplication 
-    static HyperMatrix<1> VectorProduct(HyperMatrix<1> A, HyperMatrix<1> B);
+    static HyperMatrix_OMP<1> VectorProduct(HyperMatrix_OMP<1> A, HyperMatrix_OMP<1> B);
 
     /// <summary> Multiply two N dimensional Hyper Matrices
     /// <param name=A> Right HyperMatrix for multiplication
     /// <param name=B> Left HyperMatrix for multiplication 
-    static HyperMatrix MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix_OMP MatrixProduct(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Add all elements of the matrix for a total sum
     /// <param name=A> HyperMatrix to total
-    static HyperMatrix<N> Sum(HyperMatrix<N> A);
+    static HyperMatrix_OMP<N> Sum(HyperMatrix_OMP<N> A);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the larger one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix<N> LargerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix_OMP<N> LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the smaller one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix<N> SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+    static HyperMatrix_OMP<N> SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Apply the function func to every value in the matrix. Returns matrix of new values. </summary>
     /// <param name=func> Function to be applied to values in Matrix </param>
-    HyperMatrix<N> Apply(std::function<double(double)> func);
+    HyperMatrix_OMP<N> Apply(std::function<double(double)> func);
 
     /// <summary> Return the number of dimensions N this matrix has </summary>
     int GetDims();
@@ -114,14 +114,14 @@ public:
 };
 
 template<unsigned int N>
-HyperMatrix<N>::HyperMatrix(std::array<int, N> shape)
+HyperMatrix_OMP<N>::HyperMatrix_OMP(std::array<int, N> shape)
 {
     this->shape = shape;
     this->calculateStride();
 }
 
 template<unsigned int N>
-HyperMatrix<N>::HyperMatrix(std::array<int, N> shape, std::vector<double> values)
+HyperMatrix_OMP<N>::HyperMatrix_OMP(std::array<int, N> shape, std::vector<double> values)
 {
     this->shape = shape;
     this->values = values;
@@ -129,11 +129,11 @@ HyperMatrix<N>::HyperMatrix(std::array<int, N> shape, std::vector<double> values
 }
 
 template<unsigned int N>
-HyperMatrix<N>::~HyperMatrix()
+HyperMatrix_OMP<N>::~HyperMatrix_OMP()
 {}
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Zeros(std::array<int, N> shape)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Zeros(std::array<int, N> shape)
 {
     int length = 1;
 // Probably not needed
@@ -141,11 +141,11 @@ HyperMatrix<N> HyperMatrix<N>::Zeros(std::array<int, N> shape)
     for (int i = 0; i < N; i++)
         length *= shape[i];
     std::vector<double> values(length, 0.0);
-    return HyperMatrix<N>(shape, values);
+    return HyperMatrix_OMP<N>(shape, values);
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Ones(std::array<int, N> shape)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Ones(std::array<int, N> shape)
 {
     int length = 1;
 // Probably not needed
@@ -153,11 +153,11 @@ HyperMatrix<N> HyperMatrix<N>::Ones(std::array<int, N> shape)
     for (int i = 0; i < N; i++)
         length *= shape[i];
     std::vector<double> values(length, 1.0);
-    return HyperMatrix<N>(shape, values);
+    return HyperMatrix_OMP<N>(shape, values);
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Identity(std::array<int, N> shape)
 {
     // Identity must be "square" so all dimensions must be equal
 // Not sure if this will still throw error correctly when parallel
@@ -166,7 +166,7 @@ HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
         if (shape[i] != shape[i+1])
             throw;
 
-    HyperMatrix<N> identity = HyperMatrix<N>::Zeros(shape);
+    HyperMatrix_OMP<N> identity = HyperMatrix_OMP<N>::Zeros(shape);
     int dim = shape[0];
 #pragma omp parallel for
     for (int i = 0; i < dim; i++) 
@@ -181,7 +181,7 @@ HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Add(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
 // Again unsure if errors will throw correctly
 #pragma omp parallel for
@@ -194,7 +194,7 @@ HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
         }
     }
 
-    HyperMatrix<N> result = HyperMatrix::Zeros(A.getShape());
+    HyperMatrix_OMP<N> result = HyperMatrix_OMP::Zeros(A.getShape());
 #pragma omp parallel for
     for (int i = 0; i < A.values.size(); i++)
         result.values[i] = A.values[i] + B.values[i];
@@ -203,7 +203,7 @@ HyperMatrix<N> HyperMatrix<N>::Add(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Subtract(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Subtract(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
 // Again unsure if errors will throw correctly
 #pragma omp parallel for
@@ -216,7 +216,7 @@ HyperMatrix<N> HyperMatrix<N>::Subtract(HyperMatrix<N> A, HyperMatrix<N> B)
         }
     }
 
-    HyperMatrix<N> result = HyperMatrix::Zeros(A.getShape());
+    HyperMatrix_OMP<N> result = HyperMatrix_OMP::Zeros(A.getShape());
 #pragma omp parallel for
     for (int i = 0; i < A.values.size(); i++)
         result.values[i] = A.values[i] - B.values[i];
@@ -225,9 +225,9 @@ HyperMatrix<N> HyperMatrix<N>::Subtract(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::ScalarMultiply(HyperMatrix_OMP<N> A, double s)
 {
-    HyperMatrix<N> result = HyperMatrix<N>::Zeros(A.shape);
+    HyperMatrix_OMP<N> result = HyperMatrix_OMP<N>::Zeros(A.shape);
 #pragma omp parallel for
     for (int i = 0; i < result.values.size(); i++)
         result.values[i] = s*A.values[i];
@@ -236,7 +236,7 @@ HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
 }
 
 template<>
-HyperMatrix<1> HyperMatrix<1>::VectorProduct(HyperMatrix<1> A, HyperMatrix<1> B)
+HyperMatrix_OMP<1> HyperMatrix_OMP<1>::VectorProduct(HyperMatrix_OMP<1> A, HyperMatrix_OMP<1> B)
 {
     if (A.shape[0] != B.shape[0])
     {
@@ -250,11 +250,11 @@ HyperMatrix<1> HyperMatrix<1>::VectorProduct(HyperMatrix<1> A, HyperMatrix<1> B)
     for (int i = 0; i < size; i++)
         result += A.values[i] * B.values[i];
 
-    return HyperMatrix<1>({1}, {result});
+    return HyperMatrix_OMP<1>({1}, {result});
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
     if (N == 1)
     {
@@ -273,7 +273,7 @@ HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
         for (int i = 0; i < size; i++)
             result += A.values[i] * B.values[i];
 
-        return HyperMatrix<N>({1}, {result});
+        return HyperMatrix_OMP<N>({1}, {result});
 
     }
     else
@@ -328,12 +328,12 @@ HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
         }
 
 
-        return HyperMatrix(new_shape, new_values);
+        return HyperMatrix_OMP(new_shape, new_values);
     }
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Sum(HyperMatrix<N> A)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Sum(HyperMatrix_OMP<N> A)
 {
     int result = 0;
 #pragma omp parallel for reduction(+:result)
@@ -344,7 +344,7 @@ HyperMatrix<N> HyperMatrix<N>::Sum(HyperMatrix<N> A)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;
@@ -366,7 +366,7 @@ HyperMatrix<N> HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;
@@ -388,7 +388,7 @@ HyperMatrix<N> HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Apply(std::function<double(double)> func)
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Apply(std::function<double(double)> func)
 {
     int size = this->values.size();
     std::vector<double> newValues(size);
@@ -396,31 +396,31 @@ HyperMatrix<N> HyperMatrix<N>::Apply(std::function<double(double)> func)
     for (int i = 0; i < size; i++)
         newValues[i] = func(this->values[i]);
 
-    HyperMatrix<N> newMatrix(this->shape, newValues);
+    HyperMatrix_OMP<N> newMatrix(this->shape, newValues);
     return newMatrix;
 }
 
 template<unsigned int N>
-int HyperMatrix<N>::GetDims()
+int HyperMatrix_OMP<N>::GetDims()
 {
     return this->dims;
 }
 
 template<unsigned int N>
-double HyperMatrix<N>::At(std::array<int, N> indices)
+double HyperMatrix_OMP<N>::At(std::array<int, N> indices)
 {
     int idx = this->convertIndex(indices);
     return this->values[idx];
 }
 
 template<unsigned int N>
-void HyperMatrix<N>::calculateStride()
+void HyperMatrix_OMP<N>::calculateStride()
 {
-    this->strides = HyperMatrix<N>::CalculateStride(this->shape);
+    this->strides = HyperMatrix_OMP<N>::CalculateStride(this->shape);
 }
 
 template<unsigned int N>
-std::array<int, N> HyperMatrix<N>::CalculateStride(std::array<int, N> shape)
+std::array<int, N> HyperMatrix_OMP<N>::CalculateStride(std::array<int, N> shape)
 {
     // Row Major Strides (like numpy)
     // https://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
@@ -437,7 +437,7 @@ std::array<int, N> HyperMatrix<N>::CalculateStride(std::array<int, N> shape)
 }
 
 template<unsigned int N>
-int HyperMatrix<N>::ConvertIndex(std::array<int, N> indices, std::array<int, N> strides)
+int HyperMatrix_OMP<N>::ConvertIndex(std::array<int, N> indices, std::array<int, N> strides)
 {
     int idx = 0;
 #pragma omp parallel for reduction(+:idx)
@@ -447,14 +447,14 @@ int HyperMatrix<N>::ConvertIndex(std::array<int, N> indices, std::array<int, N> 
 }
 
 template<unsigned int N>
-int HyperMatrix<N>::convertIndex(std::array<int, N> indices)
+int HyperMatrix_OMP<N>::convertIndex(std::array<int, N> indices)
 {
-    return HyperMatrix<N>::ConvertIndex(indices, this->strides);
+    return HyperMatrix_OMP<N>::ConvertIndex(indices, this->strides);
 }
 
 // TODO: Try to print values similar to numpy style...or anything really?
 template<unsigned int N>
-std::string HyperMatrix<N>::toString() const
+std::string HyperMatrix_OMP<N>::toString() const
 {
     std::stringstream ss;
 
@@ -485,49 +485,49 @@ std::string HyperMatrix<N>::toString() const
 }
 
 template<unsigned int N>
-std::array<int,N> HyperMatrix<N>::getShape()
+std::array<int,N> HyperMatrix_OMP<N>::getShape()
 {
     return this->shape;
 }
 
 template<unsigned int N>
-std::array<int, N> HyperMatrix<N>::getStrides()
+std::array<int, N> HyperMatrix_OMP<N>::getStrides()
 {
     return this->strides;
 }
 
 template<unsigned int N>
-std::vector<double> HyperMatrix<N>::getValues()
+std::vector<double> HyperMatrix_OMP<N>::getValues()
 {
     return this->values;
 }
 
 template<unsigned int N>
-inline std::ostream &operator<<(std::ostream &os, HyperMatrix<N> const &M)
+inline std::ostream &operator<<(std::ostream &os, HyperMatrix_OMP<N> const &M)
 {
     return os << std::string(M);
 }
 
 template<unsigned int N>
-inline HyperMatrix<N> operator-(const HyperMatrix<N>A)
+inline HyperMatrix_OMP<N> operator-(const HyperMatrix_OMP<N>A)
 {
-    return HyperMatrix<N>::ScalarMultiply(A,-1);
+    return HyperMatrix_OMP<N>::ScalarMultiply(A,-1);
 }
 
 template<unsigned int N>
-inline HyperMatrix<N> operator+(const HyperMatrix<N> A, const HyperMatrix<N> B)
+inline HyperMatrix_OMP<N> operator+(const HyperMatrix_OMP<N> A, const HyperMatrix_OMP<N> B)
 {
-    return HyperMatrix<N>::Add(A,B);
+    return HyperMatrix_OMP<N>::Add(A,B);
 }
 
 template<unsigned int N>
-inline HyperMatrix<N> operator-(const HyperMatrix<N> A, const HyperMatrix<N> B)
+inline HyperMatrix_OMP<N> operator-(const HyperMatrix_OMP<N> A, const HyperMatrix_OMP<N> B)
 {
-    return HyperMatrix<N>::Subtract(A,B);
+    return HyperMatrix_OMP<N>::Subtract(A,B);
 }
 
 template<unsigned int N>
-inline HyperMatrix<N> operator*(const HyperMatrix<N> A, const HyperMatrix<N> B)
+inline HyperMatrix_OMP<N> operator*(const HyperMatrix_OMP<N> A, const HyperMatrix_OMP<N> B)
 {
-    return HyperMatrix<N>::MatrixMultiply(A,B);
+    return HyperMatrix_OMP<N>::MatrixMultiply(A,B);
 }
