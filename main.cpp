@@ -67,17 +67,19 @@ void TestArithmatic()
 
 void TestScale()
 {
-    const unsigned int N = 2;
-    int n = 4096;
-    int m = 2160;
+    const unsigned int N = 3;
+    int n = 300;//4096;
+    int m = 300;//2160;
     int z = 3;
-    array<int, N> shape_A = {n,m};
-    array<int, N> shape_B = {m,n};
+
+    array<int, N> shape_A = {z,n,m};
+    array<int, N> shape_B = {z,m,n};
 
     HyperMatrix<N> A = HyperMatrix<N>::Zeros(shape_A);
     HyperMatrix<N> B = HyperMatrix<N>::Ones(shape_B);
 
-    A*B;
+    A * B;
+
 }
 
 void TimeTest(function<void()> test, string testName)
