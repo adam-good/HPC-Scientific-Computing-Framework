@@ -160,19 +160,19 @@ template<unsigned int N>
 HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Identity(std::array<int, N> shape)
 {
     // Identity must be "square" so all dimensions must be equal
-// Not sure if this will still throw error correctly when parallel
-#pragma omp parallel for
     for (int i = 0; i < N-1; i++)
         if (shape[i] != shape[i+1])
             throw;
 
     HyperMatrix_OMP<N> identity = HyperMatrix_OMP<N>::Zeros(shape);
     int dim = shape[0];
-#pragma omp parallel for
-    for (int i = 0; i < dim; i++) 
+
+    int i,j;
+#pragma omp parallel for private(j)
+    for (i = 0; i < dim; i++) 
     {
         int idx = 0;
-        for (int j = 0; j < N; j++)
+        for (j = 0; j < N; j++)
             idx += i * identity.getStrides()[j];
         identity.values[idx] = 1;
     }
@@ -183,8 +183,6 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Identity(std::array<int, N> shape)
 template<unsigned int N>
 HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Add(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
-// Again unsure if errors will throw correctly
-#pragma omp parallel for
     for (int i = 0; i < N; i++)
     {
         if (A.shape[i] != B.shape[i])
@@ -205,8 +203,6 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Add(HyperMatrix_OMP<N> A, HyperMatrix_OMP
 template<unsigned int N>
 HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Subtract(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
-// Again unsure if errors will throw correctly
-#pragma omp parallel for
     for (int i = 0; i < N; i++)
     {
         if (A.shape[i] != B.shape[i])
@@ -298,7 +294,6 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, Hyper
 
         // Determine the number of rank-2 hypermatrices are in the hypermatrix
         int num_matrices = 1;
-#pragma omp parallel for reduction(*:num_matrices)
         for (int i = 0; i < N-2; i++)
             num_matrices *= new_shape[i];
         int a_mat_size = A.shape[N-1] * A.shape[N-2];
@@ -308,15 +303,17 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, Hyper
         std::vector<double> new_values(new_size);
         int idx = 0;
         int shared_dim = A.shape[N-1];
-#pragma omp parallel for private(i,j,k)
-        for (int M = 0; M < num_matrices; M++)
+
+        int i,j,M;
+#pragma omp parallel for private(i,j)
+        for (M = 0; M < num_matrices; M++)
         {
             // TODO: Explain indexing here
             std::vector<double> a_vals(A.values.begin() + M*a_mat_size, A.values.begin() + M*a_mat_size + a_mat_size);
             std::vector<double> b_vals(B.values.begin() + M*b_mat_size, B.values.begin() + M*b_mat_size + b_mat_size);
 
-            for (int i = 0; i < a_vals.size() / shared_dim; i++)
-            for (int j = 0; j < b_vals.size() / shared_dim; j++)
+            for (i = 0; i < a_vals.size() / shared_dim; i++)
+            for (j = 0; j < b_vals.size() / shared_dim; j++)
             {
                 int dotprod = 0;
                 for (int k = 0; k < shared_dim; k++)
@@ -351,6 +348,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::LargerSum(HyperMatrix_OMP<N> A, HyperMatr
 #pragma omp parallel for reduction(+:Aresult)
     for (int i = 0; i < A.values.size(); i++)
         Aresult += A.values[i];
+
 #pragma omp parallel for reduction(+:Bresult)
     for (int i = 0; i < B.values.size(); i++)
         Bresult += B.values[i];
@@ -373,6 +371,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::SmallerSum(HyperMatrix_OMP<N> A, HyperMat
 #pragma omp parallel for reduction(+:Aresult)
     for (int i = 0; i < A.values.size(); i++)
         Aresult += A.values[i];
+
 #pragma omp parallel for reduction(+:Bresult)
     for (int i = 0; i < B.values.size(); i++)
         Bresult += B.values[i];
@@ -425,7 +424,7 @@ std::array<int, N> HyperMatrix_OMP<N>::CalculateStride(std::array<int, N> shape)
     // Row Major Strides (like numpy)
     // https://docs.scipy.org/doc/numpy/reference/arrays.ndarray.html
     std::array<int, N> strides;
-#pragma omp parallel for
+
     for (int k = 0; k < N; k++)
     {
         strides[k] = 1;
@@ -440,7 +439,7 @@ template<unsigned int N>
 int HyperMatrix_OMP<N>::ConvertIndex(std::array<int, N> indices, std::array<int, N> strides)
 {
     int idx = 0;
-#pragma omp parallel for reduction(+:idx)
+
     for (int i = 0; i < N; i++)
         idx += indices[i] * strides[i];
     return idx;
