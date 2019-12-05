@@ -61,10 +61,15 @@ public:
     /// <param name=s> Scalar to be multiplied by A
     static HyperMatrix<N> ScalarMultiply(HyperMatrix<N> A, double s);
 
+    /// <summary> Standard Dot Product
+    /// <param name=A> Vector for multiplication
+    /// <param name=B> Vector for multiplication 
+    static HyperMatrix<1> VectorProduct(HyperMatrix<1> A, HyperMatrix<1> B);
+
     /// <summary> Multiply two N dimensional Hyper Matrices
-    /// <param name=A> HyperMatrix for multiplication
-    /// <param name=B> HyperMatrix for multiplication 
-    static HyperMatrix<N> MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B);
+    /// <param name=A> Right HyperMatrix for multiplication
+    /// <param name=B> Left HyperMatrix for multiplication 
+    static HyperMatrix MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B);
 
     /// <summary> Add all elements of the matrix for a total sum
     /// <param name=A> HyperMatrix to total
@@ -230,43 +235,101 @@ HyperMatrix<N> HyperMatrix<N>::ScalarMultiply(HyperMatrix<N> A, double s)
     return result;
 }
 
-template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::MatrixMultiply(HyperMatrix<N> A, HyperMatrix<N> B)
+template<>
+HyperMatrix<1> HyperMatrix<1>::VectorProduct(HyperMatrix<1> A, HyperMatrix<1> B)
 {
-    if (N != 2)
+    if (A.shape[0] != B.shape[0])
     {
-        std::cout << "Higher Dimension Multiplication Not Implemented" << std::endl;
+        std::cout << "Vectors must be same length for dot product!" << std::endl;
         throw;
     }
+    int size = A.shape[0];
 
-    if (A.shape[1] != B.shape[0])
+    double result = 0;
+#pragma omp parallel for reduction(+:result)
+    for (int i = 0; i < size; i++)
+        result += A.values[i] * B.values[i];
+
+    return HyperMatrix<1>({1}, {result});
+}
+
+template<unsigned int N>
+HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    if (N == 1)
     {
-        std::cout << "N=2 Multiplication Requires proper matrix shapes!" << std::endl;
-        throw;
+        // TODO: Why won't this work?
+        // return VectorProduct(A,B);
+
+        if (A.shape[0] != B.shape[0])
+        {
+            std::cout << "Vectors must be same length for dot product!" << std::endl;
+            throw;
+        }
+        int size = A.shape[0];
+
+        double result = 0;
+#pragma omp parallel for reduction(+:result)
+        for (int i = 0; i < size; i++)
+            result += A.values[i] * B.values[i];
+
+        return HyperMatrix<N>({1}, {result});
+
     }
-
-    std::array<int,N> new_shape = {A.shape[0], B.shape[1]};
-    std::vector<double> new_values(A.shape[0] * B.shape[1]);
-    std::array<int, N> strides = HyperMatrix<N>::CalculateStride(new_shape);
-    int shared_dim = A.shape[1];
-
-    std::vector<double> a_vals = A.values;
-    std::vector<double> b_vals = B.values;
-// Just parallelizing outside loop
-#pragma omp parallel for
-    for (int i = 0; i < a_vals.size() / A.shape[1]; i++)
-    for (int j = 0; j < b_vals.size() / B.shape[0]; j++)
+    else
     {
-        int dotprod = 0;
-        for (int k = 0; k < shared_dim; k++)
-            dotprod += a_vals[i*A.strides[0] + k] * b_vals[k * strides[0] + j];
+        // Compare dimensions to iterate over
+        if (A.shape[N-1] != B.shape[N-2])
+        {
+            std::cout << "Improper Shape for N-Dimensional Matrix Multiplication" << std::endl;
+            throw;
+        }
+        
+        // Determine New Shape
+        std::vector<int> shape_vec(A.shape.begin(), A.shape.end());
+        shape_vec[shape_vec.size()-1] = B.shape[N-1];
+        std::array<int, N> new_shape;
+        std::copy(shape_vec.begin(), shape_vec.end(), new_shape.begin());
 
-        new_values[ConvertIndex({i,j}, strides)] = dotprod;
+        // Calculate New Size
+        int new_size = 1;
+        for (int i = 0; i < N; i++)
+            new_size *= new_shape[i];
+
+        // Determine the number of rank-2 hypermatrices are in the hypermatrix
+        int num_matrices = 1;
+#pragma omp parallel for reduction(*:num_matrices)
+        for (int i = 0; i < N-2; i++)
+            num_matrices *= new_shape[i];
+        int a_mat_size = A.shape[N-1] * A.shape[N-2];
+        int b_mat_size = A.shape[N-1] * A.shape[N-2];
+
+        // Initialize new values
+        std::vector<double> new_values(new_size);
+        int idx = 0;
+        int shared_dim = A.shape[N-1];
+#pragma omp parallel for private(i,j,k)
+        for (int M = 0; M < num_matrices; M++)
+        {
+            // TODO: Explain indexing here
+            std::vector<double> a_vals(A.values.begin() + M*a_mat_size, A.values.begin() + M*a_mat_size + a_mat_size);
+            std::vector<double> b_vals(B.values.begin() + M*b_mat_size, B.values.begin() + M*b_mat_size + b_mat_size);
+
+            for (int i = 0; i < a_vals.size() / shared_dim; i++)
+            for (int j = 0; j < b_vals.size() / shared_dim; j++)
+            {
+                int dotprod = 0;
+                for (int k = 0; k < shared_dim; k++)
+                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[k*B.strides[N-2] + j];
+                
+                new_values[idx] = dotprod;
+                idx += 1;
+            }
+        }
+
+
+        return HyperMatrix(new_shape, new_values);
     }
-
-    HyperMatrix<N> C(new_shape, new_values);
-
-    return C;
 }
 
 template<unsigned int N>
