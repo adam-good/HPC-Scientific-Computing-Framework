@@ -7,28 +7,6 @@
 
 using namespace std;
 
-void TestAdd()
-{
-    const unsigned int N = 3;
-    array<int, N> shape = {3, 300, 300};
-
-    HyperMatrix<N> A = HyperMatrix<N>::Zeros(shape);
-    HyperMatrix<N> B = HyperMatrix<N>::Ones(shape);
-
-    A + B;
-}
-
-void TestAdd_OMP()
-{
-    const unsigned int N = 3;
-    array<int, N> shape = {3, 300, 300};
-
-    HyperMatrix_OMP<N> A = HyperMatrix_OMP<N>::Zeros(shape);
-    HyperMatrix_OMP<N> B = HyperMatrix_OMP<N>::Ones(shape);
-
-    A + B;
-}
-
 void TimeTest(function<void()> test, string testName)
 {
     double begin = omp_get_wtime();
@@ -41,25 +19,52 @@ void TimeTest(function<void()> test, string testName)
     cout << testName << "\n  Elapsed Time: " << elapsed_time << " Seconds" << endl;
 }
 
+void TestAdd()
+{
+    const unsigned int N = 3;
+    array<int, N> shape = {100, 1000, 1000};
+
+    auto test_serial = [=]() {
+        HyperMatrix<N> A = HyperMatrix<N>::Zeros(shape);
+        HyperMatrix<N> B = HyperMatrix<N>::Ones(shape);
+        A + B;
+    };
+
+    auto test_omp = [=]() {
+        HyperMatrix_OMP<N> A = HyperMatrix_OMP<N>::Zeros(shape);
+        HyperMatrix_OMP<N> B = HyperMatrix_OMP<N>::Ones(shape);
+        A + B;
+    };
+
+    TimeTest(test_serial, "Serial Addition");
+    TimeTest(test_omp, "OMP Addition");
+}
+
+void TestScalar()
+{
+    const unsigned int N = 3;
+    array<int,N> shape = {200,1000,1000};
+
+    auto test_serial = [=]() {
+        HyperMatrix<N> A = HyperMatrix<N>::Ones(shape);
+        HyperMatrix<N>::ScalarMultiply(A, 8675309);
+    };
+
+    auto test_omp = [=]() {
+        HyperMatrix_OMP<N> A = HyperMatrix_OMP<N>::Ones(shape);
+        HyperMatrix_OMP<N>::ScalarMultiply(A, 8675309);
+    };
+
+    TimeTest(test_serial, "Serial Scalar Multiply");
+    TimeTest(test_omp, "OMP Scalar Multiply");
+}
+
+
+
 int main(void)
 {
-    TimeTest(TestAdd, "Serial Addition");
-    TimeTest(TestAdd_OMP, "OMP Addition");
-
-
-    const unsigned int N = 2;
-    array<int, N> shape = {2,2};
-    vector<double> vals_A = {32,54,12,58};
-    vector<double> vals_B = {-54,14,3,58};
-    vector<double> vals_C = {-22,68,15,116};
-
-    HyperMatrix_OMP<N> A(shape, vals_A);
-    HyperMatrix_OMP<N> B(shape, vals_B);
-    HyperMatrix_OMP<N> C(shape, vals_C);
-
-
-    cout << (A == B) << endl;
-    cout << (A+B == C) << endl;
+    TestAdd();
+    TestScalar();
 
     return 0;
 }
