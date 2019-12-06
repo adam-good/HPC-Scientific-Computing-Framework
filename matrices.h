@@ -45,6 +45,11 @@ public:
     /// <param name=shape> Array containing the sizes of each dimension of the Matrix </param>
     static HyperMatrix<N> Identity(std::array<int, N> shape);
 
+    /// <summary> Tests A and B for equality
+    /// <param name=A> HyperMatrix for equality test
+    /// <param name=B> HyperMatrix for equality test
+    static bool Equals(HyperMatrix<N> A, HyperMatrix<N> B);
+
     /// <summary> Add two N dimensional Hyper Matrices element-wise
     /// <param name=A> HyperMatrix for addition
     /// <param name=B> HyperMatrix for addition 
@@ -171,6 +176,22 @@ HyperMatrix<N> HyperMatrix<N>::Identity(std::array<int, N> shape)
     }
 
     return identity;
+}
+
+template<unsigned int N>
+bool HyperMatrix<N>::Equals(HyperMatrix<N> A, HyperMatrix<N> B)
+{
+    for (int n = 0; n < N; n++)
+        if (A.shape[n] != B.shape[n])
+            return false;
+
+    int size = A.values.size();
+
+    for (int i = 0; i < size; i++)
+        if (A.values[i] != B.values[i])
+            return false;
+
+    return true;
 }
 
 template<unsigned int N>
@@ -490,6 +511,12 @@ template<unsigned int N>
 inline std::ostream &operator<<(std::ostream &os, HyperMatrix<N> const &M)
 {
     return os << std::string(M);
+}
+
+template<unsigned int N>
+inline bool operator==(const HyperMatrix<N> A, const HyperMatrix<N> B)
+{
+    return HyperMatrix<N>::Equals(A,B);
 }
 
 template<unsigned int N>

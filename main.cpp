@@ -45,5 +45,21 @@ int main(void)
 {
     TimeTest(TestAdd, "Serial Addition");
     TimeTest(TestAdd_OMP, "OMP Addition");
+
+
+    const unsigned int N = 2;
+    array<int, N> shape = {2,2};
+    vector<double> vals_A = {32,54,12,58};
+    vector<double> vals_B = {-54,14,3,58};
+    vector<double> vals_C = {-22,68,15,116};
+
+    HyperMatrix_OMP<N> A(shape, vals_A);
+    HyperMatrix_OMP<N> B(shape, vals_B);
+    HyperMatrix_OMP<N> C(shape, vals_C);
+
+
+    cout << (A == B) << endl;
+    cout << (A+B == C) << endl;
+
     return 0;
 }
