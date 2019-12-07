@@ -4,7 +4,7 @@
 #include <omp.h>
 #include "matrices.h"
 #include "matrices-omp.h"
-#include "matrices-cuda.h"
+// #include "matrices-cuda.h"
 
 using namespace std;
 
@@ -37,15 +37,15 @@ void TestAdd()
         A + B;
     };
 
-    auto test_cuda = [=]() {
-        HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Zeros(shape);
-        HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
-        A + B;
-    };
+    //auto test_cuda = [=]() {
+    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Zeros(shape);
+    //    HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
+    //    A + B;
+    //};
 
     TimeTest(test_serial, "Serial Addition");
     TimeTest(test_omp, "OMP Addition");
-    TimeTest(test_cuda, "CUDA Addition");
+    // TimeTest(test_cuda, "CUDA Addition");
 }
 
 void TestScalar()
@@ -63,14 +63,14 @@ void TestScalar()
         HyperMatrix_OMP<N>::ScalarMultiply(A, 8675309);
     };
 
-    auto test_cuda = [=]() {
-        HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
-        HyperMatrix_CUDA<N>::ScalarMultiply(A, 8675309);
-    };
+    //auto test_cuda = [=]() {
+    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
+    //    HyperMatrix_CUDA<N>::ScalarMultiply(A, 8675309);
+    //};
 
     TimeTest(test_serial, "Serial Scalar Multiply");
     TimeTest(test_omp, "OMP Scalar Multiply");
-    TimeTest(test_cuda, "CUDA Scalar Multiply");
+    // TimeTest(test_cuda, "CUDA Scalar Multiply");
 }
 
 void TestMultiplication()
@@ -90,23 +90,42 @@ void TestMultiplication()
         A*B;
     };
 
-    auto test_cuda = [=]() {
-        HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
-        HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
-        A*B;
-    };
+    //auto test_cuda = [=]() {
+    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
+    //    HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
+    //    A*B;
+    //};
 
     TimeTest(test_serial, "Serial Multiply");
     TimeTest(test_omp, "OMP Multiply");
-    TimeTest(test_cuda, "CUDA Multiply");
+    //TimeTest(test_cuda, "CUDA Multiply");
 }
 
+void TestSum()
+{
+    const unsigned int N = 3;
+    array<int,N> shape = {200,100,100};
+
+    auto test_serial = [=]() {
+        HyperMatrix<N> A = HyperMatrix<N>::Ones(shape);
+        HyperMatrix<N>::Sum(A);
+    };
+
+    auto test_omp = [=]() {
+        HyperMatrix_OMP<N> A = HyperMatrix_OMP<N>::Ones(shape);
+        HyperMatrix_OMP<N>::Sum(A);
+    };
+
+    TimeTest(test_serial, "Serial Sum");
+    TimeTest(test_omp, "OMP Sum");
+}
 
 int main(void)
 {
     // TestAdd();
     // TestScalar();
-    TestMultiplication();
+    // TestMultiplication();
+    TestSum();
 
     // const unsigned int N = 2;
     // array<int, N> shapeA = {3,2};

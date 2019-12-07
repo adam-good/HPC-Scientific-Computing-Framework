@@ -79,17 +79,17 @@ public:
 
     /// <summary> Add all elements of the matrix for a total sum
     /// <param name=A> HyperMatrix to total
-    static HyperMatrix_OMP<N> Sum(HyperMatrix_OMP<N> A);
+    static double Sum(HyperMatrix_OMP<N> A);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the larger one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix_OMP<N> LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
+    static double LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the smaller one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix_OMP<N> SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
+    static double SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Apply the function func to every value in the matrix. Returns matrix of new values. </summary>
     /// <param name=func> Function to be applied to values in Matrix </param>
@@ -348,7 +348,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, Hyper
 }
 
 template<unsigned int N>
-HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Sum(HyperMatrix_OMP<N> A)
+double HyperMatrix_OMP<N>::Sum(HyperMatrix_OMP<N> A)
 {
     int result = 0;
 #pragma omp parallel for reduction(+:result)
@@ -359,7 +359,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Sum(HyperMatrix_OMP<N> A)
 }
 
 template<unsigned int N>
-HyperMatrix_OMP<N> HyperMatrix_OMP<N>::LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
+double HyperMatrix_OMP<N>::LargerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;
@@ -382,7 +382,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::LargerSum(HyperMatrix_OMP<N> A, HyperMatr
 }
 
 template<unsigned int N>
-HyperMatrix_OMP<N> HyperMatrix_OMP<N>::SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
+double HyperMatrix_OMP<N>::SmallerSum(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;

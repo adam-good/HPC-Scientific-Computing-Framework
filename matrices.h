@@ -77,17 +77,17 @@ public:
 
     /// <summary> Add all elements of the matrix for a total sum
     /// <param name=A> HyperMatrix to total
-    static HyperMatrix<N> Sum(HyperMatrix<N> A);
+    static double Sum(HyperMatrix<N> A);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the larger one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix<N> LargerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+    static double LargerSum(HyperMatrix<N> A, HyperMatrix<N> B);
 
     /// <summary> Compare two N dimensional Hyper Matrices and return the smaller one
     /// <param name=A> HyperMatrix to compare
     /// <param name=B> HyperMatrix to compare
-    static HyperMatrix<N> SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B);
+    static double SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B);
 
     /// <summary> Apply the function func to every value in the matrix. Returns matrix of new values. </summary>
     /// <param name=func> Function to be applied to values in Matrix </param>
@@ -333,7 +333,7 @@ HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::Sum(HyperMatrix<N> A)
+double HyperMatrix<N>::Sum(HyperMatrix<N> A)
 {
     int result = 0;
 
@@ -344,7 +344,7 @@ HyperMatrix<N> HyperMatrix<N>::Sum(HyperMatrix<N> A)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+double HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;
@@ -365,7 +365,7 @@ HyperMatrix<N> HyperMatrix<N>::LargerSum(HyperMatrix<N> A, HyperMatrix<N> B)
 }
 
 template<unsigned int N>
-HyperMatrix<N> HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
+double HyperMatrix<N>::SmallerSum(HyperMatrix<N> A, HyperMatrix<N> B)
 {
     int Aresult = 0;
     int Bresult = 0;
