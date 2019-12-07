@@ -28,11 +28,15 @@ __global__ void scalar_multiply(double *x, double *y, double s, int n)
         y[index] = s*x[index];
 }
 
-__global__ void element_product(double *x, double *y, double *z, int n)
+// TODO: Implement with reduction
+// http://cuda-programming.blogspot.com/2013/01/vector-dot-product-in-cuda-c.html
+__global__ void dot_product(double *x, double *y, double *z, int n)
 {
-    int index = threadIdx.x + blockIdx.x * blockDim.x;
-    if (index < n)
-        z[index] = x[index] * y[index];
+    int threadIndex = threadIdx.x + blockIdx.x * blockDim.x;
+
+    if (threadIndex < n)
+        z[threadIndex] = x[threadIndex] * y[threadIndex];
+
 }
 
 /*
@@ -98,7 +102,7 @@ public:
     /// <summary> Standard Dot Product
     /// <param name=A> Vector for multiplication
     /// <param name=B> Vector for multiplication 
-    static HyperMatrix_CUDA<1> VectorProduct(HyperMatrix_CUDA<1> A, HyperMatrix_CUDA<1> B);
+    static HyperMatrix_CUDA<N> VectorProduct(HyperMatrix_CUDA<N> A, HyperMatrix_CUDA<N> B);
 
     /// <summary> Multiply two N dimensional Hyper Matrices
     /// <param name=A> Right HyperMatrix for multiplication
@@ -286,6 +290,9 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::Subtract(HyperMatrix_CUDA<N> A, HyperMa
 
     cudaDeviceSynchronize();
     cudaMemcpy(result.values.data(), z, size, cudaMemcpyDeviceToHost);
+    cudaFree(x);
+    cudaFree(y);
+    cudaFree(z);
 
     return result;
 }
@@ -308,23 +315,49 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::ScalarMultiply(HyperMatrix_CUDA<N> A, d
 
     cudaDeviceSynchronize();
     cudaMemcpy(result.values.data(), y, size, cudaMemcpyDeviceToHost);
+    cudaFree(x);
+    cudaFree(y);
 
     return result;
 }
 
-template<>
-HyperMatrix_CUDA<1> HyperMatrix_CUDA<1>::VectorProduct(HyperMatrix_CUDA<1> A, HyperMatrix_CUDA<1> B)
+template<unsigned int N>
+HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::VectorProduct(HyperMatrix_CUDA<N> A, HyperMatrix_CUDA<N> B)
 {
+    if (N != 1)
+        throw;
+
     if (A.shape[0] != B.shape[0])
     {
         std::cout << "Vectors must be same length for dot product!" << std::endl;
         throw;
     }
-    int size = A.shape[0];
+
+    int size = A.shape[0] * sizeof(double);
+    double* dx;
+    double* dy;
+    double* dz;
+    cudaMalloc(&dx, size);
+    cudaMalloc(&dy, size);
+    cudaMalloc(&dz, size);
+    cudaMemcpy(dx, A.values.data(), size, cudaMemcpyHostToDevice);
+    cudaMemcpy(dy, B.values.data(), size, cudaMemcpyHostToDevice);
+
+    int num_blocks = (A.values.size() + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
+    dot_product<<<num_blocks, THREADS_PER_BLOCK>>>(dx,dy,dz,A.shape[0]);
+
+    double* hz = new double[A.shape[0]];
+    cudaMemcpy(hz, dz, size, cudaMemcpyDeviceToHost);
 
     double result = 0;
-    for (int i = 0; i < size; i++)
-        result += A.values[i] * B.values[i];
+    for (int i = 0; i < A.shape[0]; i++)
+        result += hz[i];
+
+
+    cudaFree(dx);
+    cudaFree(dy);
+    cudaFree(dz);
+    delete [] hz;
 
     return HyperMatrix_CUDA<1>({1}, {result});
 }
@@ -335,21 +368,7 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
     if (N == 1)
     {
         // TODO: Why won't this work?
-        // return VectorProduct(A,B);
-
-        if (A.shape[0] != B.shape[0])
-        {
-            std::cout << "Vectors must be same length for dot product!" << std::endl;
-            throw;
-        }
-        int size = A.shape[0];
-
-        double result = 0;
-        for (int i = 0; i < size; i++)
-            result += A.values[i] * B.values[i];
-
-        return HyperMatrix_CUDA<N>({1}, {result});
-
+        return VectorProduct(A,B);
     }
     else
     {
