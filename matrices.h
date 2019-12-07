@@ -266,22 +266,7 @@ HyperMatrix<N> HyperMatrix<N>::MatrixProduct(HyperMatrix<N> A, HyperMatrix<N> B)
 {
     if (N == 1)
     {
-        // TODO: Why won't this work?
-        // return VectorProduct(A,B);
-
-        if (A.shape[0] != B.shape[0])
-        {
-            std::cout << "Vectors must be same length for dot product!" << std::endl;
-            throw;
-        }
-        int size = A.shape[0];
-
-        double result = 0;
-        for (int i = 0; i < size; i++)
-            result += A.values[i] * B.values[i];
-
-        return HyperMatrix<N>({1}, {result});
-
+        return VectorProduct(A,B);
     }
     else
     {

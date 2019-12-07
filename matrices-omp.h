@@ -279,22 +279,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, Hyper
     if (N == 1)
     {
         // TODO: Why won't this work?
-        // return VectorProduct(A,B);
-
-        if (A.shape[0] != B.shape[0])
-        {
-            std::cout << "Vectors must be same length for dot product!" << std::endl;
-            throw;
-        }
-        int size = A.shape[0];
-
-        double result = 0;
-#pragma omp parallel for reduction(+:result)
-        for (int i = 0; i < size; i++)
-            result += A.values[i] * B.values[i];
-
-        return HyperMatrix_OMP<N>({1}, {result});
-
+        return VectorProduct(A,B);
     }
     else
     {
