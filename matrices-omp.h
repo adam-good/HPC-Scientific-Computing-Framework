@@ -556,5 +556,5 @@ inline HyperMatrix_OMP<N> operator-(const HyperMatrix_OMP<N> A, const HyperMatri
 template<unsigned int N>
 inline HyperMatrix_OMP<N> operator*(const HyperMatrix_OMP<N> A, const HyperMatrix_OMP<N> B)
 {
-    return HyperMatrix_OMP<N>::MatrixMultiply(A,B);
+    return HyperMatrix_OMP<N>::MatrixProduct(A,B);
 }
