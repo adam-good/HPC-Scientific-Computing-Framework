@@ -70,7 +70,7 @@ public:
     /// <summary> Standard Dot Product
     /// <param name=A> Vector for multiplication
     /// <param name=B> Vector for multiplication 
-    static HyperMatrix_OMP<1> VectorProduct(HyperMatrix_OMP<1> A, HyperMatrix_OMP<1> B);
+    static HyperMatrix_OMP<N> VectorProduct(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B);
 
     /// <summary> Multiply two N dimensional Hyper Matrices
     /// <param name=A> Right HyperMatrix for multiplication
@@ -253,10 +253,12 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::ScalarMultiply(HyperMatrix_OMP<N> A, doub
     return result;
 }
 
-template<>
-HyperMatrix_OMP<1> HyperMatrix_OMP<1>::VectorProduct(HyperMatrix_OMP<1> A, HyperMatrix_OMP<1> B)
+template<unsigned int N>
+HyperMatrix_OMP<N> HyperMatrix_OMP<N>::VectorProduct(HyperMatrix_OMP<N> A, HyperMatrix_OMP<N> B)
 {
-    if (A.shape[0] != B.shape[0])
+    if (N != 1)
+        throw;
+    else if (A.shape[0] != B.shape[0])
     {
         std::cout << "Vectors must be same length for dot product!" << std::endl;
         throw;
@@ -268,7 +270,7 @@ HyperMatrix_OMP<1> HyperMatrix_OMP<1>::VectorProduct(HyperMatrix_OMP<1> A, Hyper
     for (int i = 0; i < size; i++)
         result += A.values[i] * B.values[i];
 
-    return HyperMatrix_OMP<1>({1}, {result});
+    return HyperMatrix_OMP<N>({1}, {result});
 }
 
 template<unsigned int N>
@@ -323,26 +325,35 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::MatrixProduct(HyperMatrix_OMP<N> A, Hyper
 
         // Initialize new values
         std::vector<double> new_values(new_size);
-        int idx = 0;
+        int newval_idx = 0;
         int shared_dim = A.shape[N-1];
-
-        int i,j,M;
-#pragma omp parallel for private(i,j)
+        int M,i,j;
+        #pragma omp parallel for private(i,j)
         for (M = 0; M < num_matrices; M++)
         {
-            // TODO: Explain indexing here
             std::vector<double> a_vals(A.values.begin() + M*a_mat_size, A.values.begin() + M*a_mat_size + a_mat_size);
             std::vector<double> b_vals(B.values.begin() + M*b_mat_size, B.values.begin() + M*b_mat_size + b_mat_size);
+            std::vector<double> b_vals_transpose(b_mat_size);
+            for (i = 0; i < B.shape[N-2]; i++)
+            {
+                for (j = 0; j < B.shape[N-1]; j++)
+                {
+                    int idx = i * B.shape[N-1] + j;
+                    int idxT = j * B.shape[N-2] + i;
+                    b_vals_transpose[idxT] = b_vals[idx];
+                }
+            }
+            b_vals = b_vals_transpose;
 
             for (i = 0; i < a_vals.size() / shared_dim; i++)
             for (j = 0; j < b_vals.size() / shared_dim; j++)
             {
                 int dotprod = 0;
                 for (int k = 0; k < shared_dim; k++)
-                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[k*B.strides[N-2] + j];
+                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[j*A.strides[N-2] + k];//b_vals[k*B.strides[N-2] + j];
                 
-                new_values[idx] = dotprod;
-                idx += 1;
+                new_values[newval_idx] = dotprod;
+                newval_idx += 1;
             }
         }
 

@@ -30,7 +30,7 @@ __global__ void scalar_multiply(double *x, double *y, double s, int n)
 
 // TODO: Implement with reduction
 // http://cuda-programming.blogspot.com/2013/01/vector-dot-product-in-cuda-c.html
-__global__ void dot_product(double *x, double *y, double *z, int n)
+__global__ void element_product(double *x, double *y, double *z, int n)
 {
     int threadIndex = threadIdx.x + blockIdx.x * blockDim.x;
 
@@ -326,8 +326,7 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::VectorProduct(HyperMatrix_CUDA<N> A, Hy
 {
     if (N != 1)
         throw;
-
-    if (A.shape[0] != B.shape[0])
+    else if (A.shape[0] != B.shape[0])
     {
         std::cout << "Vectors must be same length for dot product!" << std::endl;
         throw;
@@ -344,7 +343,7 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::VectorProduct(HyperMatrix_CUDA<N> A, Hy
     cudaMemcpy(dy, B.values.data(), size, cudaMemcpyHostToDevice);
 
     int num_blocks = (A.values.size() + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-    dot_product<<<num_blocks, THREADS_PER_BLOCK>>>(dx,dy,dz,A.shape[0]);
+    element_product<<<num_blocks, THREADS_PER_BLOCK>>>(dx,dy,dz,A.shape[0]);
 
     double* hz = new double[A.shape[0]];
     cudaMemcpy(hz, dz, size, cudaMemcpyDeviceToHost);
@@ -359,7 +358,7 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::VectorProduct(HyperMatrix_CUDA<N> A, Hy
     cudaFree(dz);
     delete [] hz;
 
-    return HyperMatrix_CUDA<1>({1}, {result});
+    return HyperMatrix_CUDA<N>({1}, {result});
 }
 
 template<unsigned int N>
@@ -399,23 +398,33 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
 
         // Initialize new values
         std::vector<double> new_values(new_size);
-        int idx = 0;
+        int newval_idx = 0;
         int shared_dim = A.shape[N-1];
         for (int M = 0; M < num_matrices; M++)
         {
-            // TODO: Explain indexing here
             std::vector<double> a_vals(A.values.begin() + M*a_mat_size, A.values.begin() + M*a_mat_size + a_mat_size);
             std::vector<double> b_vals(B.values.begin() + M*b_mat_size, B.values.begin() + M*b_mat_size + b_mat_size);
+            std::vector<double> b_vals_transpose(b_mat_size);
+            for (int i = 0; i < B.shape[N-2]; i++)
+            {
+                for (int j = 0; j < B.shape[N-1]; j++)
+                {
+                    int idx = i * B.shape[N-1] + j;
+                    int idxT = j * B.shape[N-2] + i;
+                    b_vals_transpose[idxT] = b_vals[idx];
+                }
+            }
+            b_vals = b_vals_transpose;
 
             for (int i = 0; i < a_vals.size() / shared_dim; i++)
             for (int j = 0; j < b_vals.size() / shared_dim; j++)
             {
                 int dotprod = 0;
                 for (int k = 0; k < shared_dim; k++)
-                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[k*B.strides[N-2] + j];
+                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[j*A.strides[N-2] + k];//b_vals[k*B.strides[N-2] + j];
                 
-                new_values[idx] = dotprod;
-                idx += 1;
+                new_values[newval_idx] = dotprod;
+                newval_idx += 1;
             }
         }
 
