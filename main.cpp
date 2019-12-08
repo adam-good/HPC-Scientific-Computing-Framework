@@ -120,12 +120,37 @@ void TestSum()
     TimeTest(test_omp, "OMP Sum");
 }
 
+double ApplySomething(double A)
+{
+    double B = A * 2 + 3;
+    return B;
+}
+void TestApply()
+{
+    const unsigned int N = 3;
+    array<int,N> shape = {200,100,100};
+
+    auto test_serial = [=]() {
+        HyperMatrix<N> A = HyperMatrix<N>::Ones(shape);
+        A.HyperMatrix<N>::Apply(ApplySomething);
+    };
+
+    auto test_omp = [=]() {
+        HyperMatrix_OMP<N> A = HyperMatrix_OMP<N>::Ones(shape);
+        A.HyperMatrix_OMP<N>::Apply(ApplySomething);
+    };
+
+    TimeTest(test_serial, "Serial Apply");
+    TimeTest(test_omp, "OMP Apply");
+}
+
 int main(void)
 {
     // TestAdd();
     // TestScalar();
     // TestMultiplication();
     TestSum();
+    TestApply();
 
     // const unsigned int N = 2;
     // array<int, N> shapeA = {3,2};
