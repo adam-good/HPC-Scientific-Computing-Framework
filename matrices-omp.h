@@ -409,7 +409,7 @@ HyperMatrix_OMP<N> HyperMatrix_OMP<N>::Apply(std::function<double(double)> func)
 {
     int size = this->values.size();
     std::vector<double> newValues(size);
-#pragma omp for
+#pragma omp parallel for
     for (int i = 0; i < size; i++)
         newValues[i] = func(this->values[i]);
 
