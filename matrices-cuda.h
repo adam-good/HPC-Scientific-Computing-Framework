@@ -36,7 +36,35 @@ __global__ void element_product(double *x, double *y, double *z, int n)
 
     if (threadIndex < n)
         z[threadIndex] = x[threadIndex] * y[threadIndex];
+}
 
+__global__ void matrix_product(double *x, double *yt, double *z, int m, int n, int k)
+{
+    int index = threadIdx.x + blockIdx.x * blockDim.x;
+
+    extern __shared__ double temp[]; // size set when called. should be m*n*k*sizeof(double)
+
+    // printf("%d %d %d\n", m,n,k);
+
+    if (index < m*k) {
+        for (int i = index%m; i < m*k; i += m)
+        {
+            temp[m*k*(index/m) + i] = x[index] * yt[i];
+        }
+    }
+
+    __syncthreads();
+
+    if (index < m*k)
+    {
+        z[index] = 0;
+        for (int i = 0; i < m; i++)
+        {
+            z[index] += temp[index*m+i];
+        }
+    }
+
+    __syncthreads();
 }
 
 /*
@@ -377,10 +405,16 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
             std::cout << "Improper Shape for N-Dimensional Matrix Multiplication" << std::endl;
             throw;
         }
+        // A submatrix shape: mxn
+        // B submatrix shape: nxk
+        int m = A.shape[N-2];
+        int n = A.shape[N-1]; // shared dimension
+        int k = B.shape[N-1];
         
         // Determine New Shape
+        // (same in all dimensions as A and B except last two: mxk)
         std::vector<int> shape_vec(A.shape.begin(), A.shape.end());
-        shape_vec[shape_vec.size()-1] = B.shape[N-1];
+        shape_vec[shape_vec.size()-1] = k; // replace n with k in new shape
         std::array<int, N> new_shape;
         std::copy(shape_vec.begin(), shape_vec.end(), new_shape.begin());
 
@@ -393,15 +427,28 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
         int num_matrices = 1;
         for (int i = 0; i < N-2; i++)
             num_matrices *= new_shape[i];
-        int a_mat_size = A.shape[N-1] * A.shape[N-2];
-        int b_mat_size = A.shape[N-1] * A.shape[N-2];
+        
+        // Calculate the size of the rank-2 hypermatrices
+        int a_mat_size = m * n;
+        int b_mat_size = n * k;
+        int c_mat_size = m * k;
 
         // Initialize new values
         std::vector<double> new_values(new_size);
         int newval_idx = 0;
-        int shared_dim = A.shape[N-1];
+        int shared_dim = n;
+
+        // Set up cuda stuff
+        int a_cuda_size = a_mat_size * sizeof(double);
+        int b_cuda_size = b_mat_size * sizeof(double);
+        int c_cuda_size = c_mat_size * sizeof(double);
+        double *dx, *dy, *dz, *hz;
+        cudaMalloc(&dx, a_cuda_size); cudaMalloc(&dy, b_cuda_size); cudaMalloc(&dz, c_cuda_size);
+        hz = new double[c_cuda_size];
+
         for (int M = 0; M < num_matrices; M++)
         {
+            // set up values. transpose b for easy indexing
             std::vector<double> a_vals(A.values.begin() + M*a_mat_size, A.values.begin() + M*a_mat_size + a_mat_size);
             std::vector<double> b_vals(B.values.begin() + M*b_mat_size, B.values.begin() + M*b_mat_size + b_mat_size);
             std::vector<double> b_vals_transpose(b_mat_size);
@@ -416,19 +463,25 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
             }
             b_vals = b_vals_transpose;
 
-            for (int i = 0; i < a_vals.size() / shared_dim; i++)
-            for (int j = 0; j < b_vals.size() / shared_dim; j++)
+            cudaMemcpy(dx, a_vals.data(), a_cuda_size, cudaMemcpyHostToDevice);
+            cudaMemcpy(dy, b_vals.data(), b_cuda_size, cudaMemcpyHostToDevice);
+
+            int num_blocks = (A.values.size() + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
+            matrix_product<<<1, THREADS_PER_BLOCK, m*n*k*sizeof(double)>>>(dx,dy,dz,m,n,k);
+
+            cudaMemcpy(hz, dz, c_cuda_size, cudaMemcpyDeviceToHost);
+
+            for (int i = 0; i < c_mat_size; i++)
             {
-                int dotprod = 0;
-                for (int k = 0; k < shared_dim; k++)
-                    dotprod += a_vals[i*A.strides[N-2] + k] * b_vals[j*A.strides[N-2] + k];//b_vals[k*B.strides[N-2] + j];
-                
-                new_values[newval_idx] = dotprod;
+                new_values[newval_idx] = hz[i];
                 newval_idx += 1;
             }
         }
 
+        cudaFree(dx); cudaFree(dy); cudaFree(dz);
+        delete [] hz;
 
+        cudaDeviceSynchronize();
         return HyperMatrix_CUDA(new_shape, new_values);
     }
 }
