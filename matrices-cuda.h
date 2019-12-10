@@ -5,7 +5,7 @@
 #include <string>
 #include <functional>
 
-#define THREADS_PER_BLOCK 512
+#define THREADS_PER_BLOCK 1024
 
 __global__ void add_vectors(double* x, double* y, double* z, int n)
 {
@@ -43,8 +43,6 @@ __global__ void matrix_product(double *x, double *yt, double *z, int m, int n, i
     int index = threadIdx.x + blockIdx.x * blockDim.x;
 
     extern __shared__ double temp[]; // size set when called. should be m*n*k*sizeof(double)
-
-    // printf("%d %d %d\n", m,n,k);
 
     if (index < m*k) {
         for (int i = index%m; i < m*k; i += m)
@@ -467,7 +465,7 @@ HyperMatrix_CUDA<N> HyperMatrix_CUDA<N>::MatrixProduct(HyperMatrix_CUDA<N> A, Hy
             cudaMemcpy(dy, b_vals.data(), b_cuda_size, cudaMemcpyHostToDevice);
 
             int num_blocks = (A.values.size() + THREADS_PER_BLOCK-1) / THREADS_PER_BLOCK;
-            matrix_product<<<1, THREADS_PER_BLOCK, m*n*k*sizeof(double)>>>(dx,dy,dz,m,n,k);
+            matrix_product<<<num_blocks, THREADS_PER_BLOCK, m*n*k*sizeof(double)>>>(dx,dy,dz,m,n,k);
 
             cudaMemcpy(hz, dz, c_cuda_size, cudaMemcpyDeviceToHost);
 
