@@ -4,7 +4,9 @@
 #include <omp.h>
 #include "matrices.h"
 #include "matrices-omp.h"
-// #include "matrices-cuda.h"
+#include "matrices-cuda.h"
+
+#define N 3
 
 using namespace std;
 
@@ -20,11 +22,8 @@ void TimeTest(function<void()> test, string testName)
     cout << testName << "\n  Elapsed Time: " << elapsed_time << " Seconds" << endl;
 }
 
-void TestAdd()
+void TestAdd(array<int, N> shape)
 {
-    const unsigned int N = 3;
-    array<int, N> shape = {50, 1000, 1000};
-
     auto test_serial = [=]() {
         HyperMatrix<N> A = HyperMatrix<N>::Zeros(shape);
         HyperMatrix<N> B = HyperMatrix<N>::Ones(shape);
@@ -37,22 +36,19 @@ void TestAdd()
         A + B;
     };
 
-    //auto test_cuda = [=]() {
-    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Zeros(shape);
-    //    HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
-    //    A + B;
-    //};
+    auto test_cuda = [=]() {
+       HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Zeros(shape);
+       HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
+       A + B;
+    };
 
     TimeTest(test_serial, "Serial Addition");
     TimeTest(test_omp, "OMP Addition");
-    // TimeTest(test_cuda, "CUDA Addition");
+    TimeTest(test_cuda, "CUDA Addition");
 }
 
-void TestScalar()
+void TestScalar(array<int,N> shape)
 {
-    const unsigned int N = 3;
-    array<int,N> shape = {50,1000,1000};
-
     auto test_serial = [=]() {
         HyperMatrix<N> A = HyperMatrix<N>::Ones(shape);
         HyperMatrix<N>::ScalarMultiply(A, 8675309);
@@ -63,21 +59,18 @@ void TestScalar()
         HyperMatrix_OMP<N>::ScalarMultiply(A, 8675309);
     };
 
-    //auto test_cuda = [=]() {
-    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
-    //    HyperMatrix_CUDA<N>::ScalarMultiply(A, 8675309);
-    //};
+    auto test_cuda = [=]() {
+       HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
+       HyperMatrix_CUDA<N>::ScalarMultiply(A, 8675309);
+    };
 
     TimeTest(test_serial, "Serial Scalar Multiply");
     TimeTest(test_omp, "OMP Scalar Multiply");
-    // TimeTest(test_cuda, "CUDA Scalar Multiply");
+    TimeTest(test_cuda, "CUDA Scalar Multiply");
 }
 
-void TestMultiplication()
+void TestMultiplication(array<int,N> shape)
 {
-    const unsigned int N = 3;
-    array<int,N> shape = {4,500,500};
-
     auto test_serial = [=]() {
         HyperMatrix<N> A = HyperMatrix<N>::Ones(shape);
         HyperMatrix<N> B = HyperMatrix<N>::Ones(shape);
@@ -90,20 +83,20 @@ void TestMultiplication()
         A*B;
     };
 
-    //auto test_cuda = [=]() {
-    //    HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
-    //    HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
-    //    A*B;
-    //};
+    auto test_cuda = [=]() {
+       HyperMatrix_CUDA<N> A = HyperMatrix_CUDA<N>::Ones(shape);
+       HyperMatrix_CUDA<N> B = HyperMatrix_CUDA<N>::Ones(shape);
+       A*B;
+    };
 
     TimeTest(test_serial, "Serial Multiply");
     TimeTest(test_omp, "OMP Multiply");
-    //TimeTest(test_cuda, "CUDA Multiply");
+    TimeTest(test_cuda, "CUDA Multiply");
 }
 
 void TestSum()
 {
-    const unsigned int N = 3;
+    // const unsigned int N = 3;
     array<int,N> shape = {200,100,100};
 
     auto test_serial = [=]() {
@@ -127,7 +120,7 @@ double ApplySomething(double A)
 }
 void TestApply()
 {
-    const unsigned int N = 3;
+    // const unsigned int N = 3;
     array<int,N> shape = {200,100,100};
 
     auto test_serial = [=]() {
@@ -146,24 +139,16 @@ void TestApply()
 
 int main(void)
 {
-    // TestAdd();
-    // TestScalar();
-    // TestMultiplication();
-    TestSum();
-    TestApply();
-
-    // const unsigned int N = 2;
-    // array<int, N> shapeA = {3,2};
-    // array<int, N> shapeB = {2,3};
-    // vector<double> valuesA = {1,2,3,4,5,6};
-    // vector<double> valuesB = {7,8,9,10,11,12};
-
-    // HyperMatrix_CUDA<N> A(shapeA, valuesA);
-    // HyperMatrix_CUDA<N> B(shapeB, valuesB);
-
-    // cout << A << endl;
-    // cout << B << endl;
-    // cout << A*B << endl;
+    array<int,N> shape = {50,256,256};
+    // TestAdd(shape);
+    // TestScalar(shape);
+    for (int i = 1; i <= 128; i += i)
+    {
+        shape = {i, 256, 256};
+        TestMultiplication(shape);
+    }
+    // TestSum();
+    // TestApply();
 
     return 0;
 }
